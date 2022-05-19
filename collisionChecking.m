@@ -1,10 +1,13 @@
 function feasible=collisionChecking(startPose,goalPose,map)
 feasible=true;
 dir=atan2(goalPose(1)-startPose(1),goalPose(2)-startPose(2));
-for r=0:0.5:sqrt(sum((startPose-goalPose).^2))
+for r=0:0.5:sqrt(sum((startPose-goalPose).^2))  % 'r' is the step size for collision check
     posCheck = startPose + r.*[sin(dir) cos(dir)];
-    if ~(feasiblePoint(ceil(posCheck),map) && feasiblePoint(floor(posCheck),map) && ...
-         feasiblePoint([ceil(posCheck(1)) floor(posCheck(2))],map) && feasiblePoint([floor(posCheck(1)) ceil(posCheck(2))],map))
+    if ~(feasiblePoint(ceil(posCheck),map) && ...
+         feasiblePoint(floor(posCheck),map) && ...
+         feasiblePoint([ceil(posCheck(1)) floor(posCheck(2))],map) &&...
+         feasiblePoint([floor(posCheck(1)) ceil(posCheck(2))],map))
+     
         feasible=false;break;
     end
 end
