@@ -2,10 +2,13 @@
 clc
 clear all; close all;
 
-x_Start=1; y_Start=1;           % set starting point
-x_Goal=100; y_Goal=100;       % set target point
-Thr=15;                 % target threshold (vicinity to be considered as target)
-Delta= 30;              % step length
+x_Start=10; y_Start=2350;           % set starting point
+x_Goal=2800; y_Goal=500;       % set target point
+% x_Start=1; y_Start=1; 
+% x_Goal=750; y_Goal=750; 
+Auto_setting = true;
+Thr=30;                 % target threshold (vicinity to be considered as target)
+Delta= 60;              % step length
 iteration_num = 3000;   % the iteration number for expanding the tree
 greedy_index = 0.1;     % how greedy the tree would expand towards target, 1 for the most greedy
 
@@ -18,11 +21,20 @@ T.v(1).dist=0;          % Euclidean distance from parten not to current node.
 T.v(1).indPrev = 0;     
 %% building the tree
 figure(1);
-ImpRgb=imread('usr_map1.png');
-Imp=rgb2gray(ImpRgb);
+ImpRgb=imread('usr_map1.png');%'usr_map1.png''newmap.png'
+% Imp=rgb2gray(ImpRgb);
+Imp=ImpRgb;
+
 imshow(Imp)
 xL=size(Imp,2);     %length of map in X
 yL=size(Imp,1);     %length of map in Y
+
+if Auto_setting
+    Thr = 0.06*xL; 
+    Delta = 0.04*xL;
+    iteration_num = 5*xL;
+end
+
 hold on
 plot(x_Start, y_Start, 'ro', 'MarkerSize',5, 'MarkerFaceColor','r');
 plot(x_Goal, y_Goal, 'go', 'MarkerSize',5, 'MarkerFaceColor','g');% plot start and target point
@@ -33,8 +45,8 @@ for iter = 1:iteration_num
     %Step 1: Randomly sample on the map
     x_rand=[];
     if (rand > greedy_index)     % randomly sample in the map
-        x_temp = floor(rand*800);
-        y_temp = floor(rand*800);
+        x_temp = floor(rand*xL);
+        y_temp = floor(rand*yL);
         x_rand = [x_temp, y_temp];
     else
         x_rand = [x_Goal, y_Goal];
