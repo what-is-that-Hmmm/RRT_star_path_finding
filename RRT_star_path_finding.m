@@ -1,16 +1,17 @@
-%% Initialise process
-clc
-clear all; close all;
+function final_PATH = RRT_star_path_finding(x_Start,y_Start,x_Goal,y_Goal,...
+    Thr,Delta,iteration_num,greedy_index,PNGmap)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Inputs: 
+% Thr:              target threshold (vicinity to be considered as target)
+% Delta:            step length
+% iteration_num:    the iteration number for expanding the tree
+% greedy_index:     how greedy the tree would expand towards target, 1 for 
+%                   the most greedy.
+% PNGmap:           A map in png format.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-x_Start=1; y_Start=1;           % set starting point
-x_Goal=700; y_Goal=700;       % set target point
-Thr=40;                 % target threshold (vicinity to be considered as target)
-Delta= 30;              % step length
-iteration_num = 1000;   % the iteration number for expanding the tree
-greedy_index = 0;     % how greedy the tree would expand towards target, 1 for the most greedy
 query_range = 2*Delta; 
-
-%% Build up initial tree
+% Build up initial tree
 T.v(1).x = x_Start;         % 'T' as tree, 'v' as node, adding starting point to the tree.
 T.v(1).y = y_Start; 
 T.v(1).xPrev = x_Start;     % initial parent node is it self.
@@ -18,10 +19,10 @@ T.v(1).yPrev = y_Start;
 T.v(1).dist=0;          % Euclidean distance from parten not to current node.
 T.v(1).indPrev = 0;   
 
-%% Setup the map
+% Setup the map
 figure(1);
-ImpRgb=imread('newmap.png');
-Imp=rgb2gray(ImpRgb);
+
+Imp=rgb2gray(PNGmap);
 imshow(Imp)
 xL=size(Imp,2);     %length of map in X
 yL=size(Imp,1);     %length of map in Y
@@ -31,8 +32,7 @@ hold on
 plot(x_Start, y_Start, 'ro', 'MarkerSize',5, 'MarkerFaceColor','r');
 plot(x_Goal, y_Goal, 'go', 'MarkerSize',5, 'MarkerFaceColor','g');% plot start and target point
 
-%% Tree growing
-% temp_min_dist = xL;
+% Tree growing
 path.cost = (xL^2+yL^2)^2;  %   cost of a path, make it large so that it can be updated
 path.pos.x = 0;
 path.pos.y = 0;
@@ -40,7 +40,6 @@ count=1;        % indicating the position in tree 'T'
 parent_point = [0,0];
 bFind = false;  % if there is a path? No path yet
 aFind = false;
-
 
 for iter = 1:iteration_num
     %% finding X_new
@@ -76,12 +75,7 @@ for iter = 1:iteration_num
        continue
     end
     
-    %%  Shaping the tree, connect X_new to the tree 
-    %   check points in query range
-%     temp_min_dist = (xL+yL); % make the distance large to update it
-    
-    %   This loop is for finding the most suitable point on the node within
-    %   query range. 
+    % Shaping the tree, connect X_new to the tree     
     Xnear = [];
     %**********************************************************************
     %Xnear format:
@@ -90,10 +84,11 @@ for iter = 1:iteration_num
     %**********************************************************************
     
     Xnear_index = 1;
+    %   This loop is for finding the most suitable point on the node within
+    %   query range. 
     for i2=1:size(T.v,2)
        NearpointDistance = sqrt((x_new(1)-T.v(i2).x)^2 + (x_new(2)-T.v(i2).y)^2);
        if (NearpointDistance < query_range)
-
            if ~collisionChecking([T.v(i2).x,T.v(i2).y], x_new,Imp)
                continue
            end
@@ -136,16 +131,9 @@ for iter = 1:iteration_num
                     T.v(Xnear(i4,6)).yPrev = x_new(2);
                     T.v(Xnear(i4,6)).dist = DP_temp;
                     T.v(Xnear(i4,6)).indPrev = i2+1;
-%                     plot([T.v(Xnear(i4,6)).x, x_new(1)],[T.v(Xnear(i4,6)).y, x_new(2)],'m');
-%                     pause(0.01); % so that we can see it
                 end
             end     %end of the for loop of rewiring
-        end
-        
-        %   Draw the growing process
-%         plot([parent_point(1), x_new(1)],[parent_point(2), x_new(2)],'g');
-%         plot(x_new(1), x_new(2), 'bo', 'MarkerSize',4, 'MarkerFaceColor','b');
-%         pause(0.03); % so that we can see it      
+        end    
     end
     
     %% ready for next cycle
@@ -194,7 +182,7 @@ for iter = 1:iteration_num
                 
                 % plot starting point and goal point.
                 plot(x_Start, y_Start, 'ro', 'MarkerSize',5, 'MarkerFaceColor','r');
-                plot(x_Goal, y_Goal, 'go', 'MarkerSize',5, 'MarkerFaceColor','g');% plot start and target point
+                plot(x_Goal, y_Goal, 'go', 'MarkerSize',5, 'MarkerFaceColor','g');
                 disp('\(^_^)/ : Environment restarted!');
                 path.cost = (xL+yL)*100;  %   cost of a path
                 path.pos.x = 0;
@@ -223,7 +211,8 @@ for iter = 1:iteration_num
                 % display the path
                 path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
                     - path.pos(j2-1).y)^2 + path.cost;
-                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'y', 'Linewidth', 2);
+                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y],...
+                    'y', 'Linewidth', 2);
                 
             end
             
@@ -248,7 +237,8 @@ for iter = 1:iteration_num
                 % display the path
                 path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
                     - path.pos(j2-1).y)^2 + path.cost;
-                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'r', 'Linewidth', 2);
+                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y],...
+                    'r', 'Linewidth', 2);
             end 
             
         else
@@ -258,28 +248,24 @@ for iter = 1:iteration_num
                 % display the path
                 path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
                     - path.pos(j2-1).y)^2 + path.cost;
-                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'r', 'Linewidth', 2);
-%                 pause(0.01);
+                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y],...
+                    'r', 'Linewidth', 2);
             end
             disp('Path updated');
         end    
-    end
-    
-    
+    end    
 end   % end of interation of 'for' loop for growing tree
-
-
 %% Path found, acqiring solution
 if aFind
     disp('Sucess, path found.');
-%     path.cost = 0;
     for j2 = 2:length(path.pos)
-        % display the path
-%         path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
-%             - path.pos(j2-1).y)^2 + path.cost;
         plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'c', 'Linewidth', 3);
-        pause(0.01);
     end
+    title("RRT* findings");
 else
-    disp('Error, no path found.');
+    error('(||-_-)~Error : RRT* searching failed. No path found.');
 end
+
+final_PATH = path;
+end
+
