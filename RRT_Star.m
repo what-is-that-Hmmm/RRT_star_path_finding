@@ -181,5 +181,5 @@ if bFind
         plot([path.pos(j).x; path.pos(j-1).x;], [path.pos(j).y; path.pos(j-1).y], 'b', 'Linewidth', 3);
     end
 else
-    disp('Error, no path found!');
+    Error('Error, no path found!');
 end
