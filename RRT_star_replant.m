@@ -32,11 +32,14 @@ plot(x_Start, y_Start, 'ro', 'MarkerSize',5, 'MarkerFaceColor','r');
 plot(x_Goal, y_Goal, 'go', 'MarkerSize',5, 'MarkerFaceColor','g');% plot start and target point
 
 %% Tree growing
-temp_min_dist = xL;
-path_cost = 0;  %   cost of a path
+% temp_min_dist = xL;
+path.cost = (xL^2+yL^2)^2;  %   cost of a path
+path.pos.x = 0;
+path.pos.y = 0;
 count=1;        % indicating the position in tree 'T'
 parent_point = [0,0];
-bFind = false;  % if there is a path 
+bFind = false;  % if there is a path? No path yet
+aFind = false;
 
 
 for iter = 1:iteration_num
@@ -75,7 +78,7 @@ for iter = 1:iteration_num
     
     %%  Shaping the tree, connect X_new to the tree 
     %   check points in query range
-    temp_min_dist = Inf; % make the distance large to update it
+%     temp_min_dist = (xL+yL); % make the distance large to update it
     
     %   This loop is for finding the most suitable point on the node within
     %   query range. 
@@ -133,16 +136,16 @@ for iter = 1:iteration_num
                     T.v(Xnear(i4,6)).yPrev = x_new(2);
                     T.v(Xnear(i4,6)).dist = DP_temp;
                     T.v(Xnear(i4,6)).indPrev = i2+1;
-                    plot([T.v(Xnear(i4,6)).x, x_new(1)],[T.v(Xnear(i4,6)).y, x_new(2)],'m');
-                    pause(0.02); % so that we can see it
+%                     plot([T.v(Xnear(i4,6)).x, x_new(1)],[T.v(Xnear(i4,6)).y, x_new(2)],'m');
+%                     pause(0.01); % so that we can see it
                 end
             end     %end of the for loop of rewiring
         end
         
         %   Draw the growing process
-        plot([parent_point(1), x_new(1)],[parent_point(2), x_new(2)],'g');
-        plot(x_new(1), x_new(2), 'bo', 'MarkerSize',4, 'MarkerFaceColor','b');
-        pause(0.05); % so that we can see it      
+%         plot([parent_point(1), x_new(1)],[parent_point(2), x_new(2)],'g');
+%         plot(x_new(1), x_new(2), 'bo', 'MarkerSize',4, 'MarkerFaceColor','b');
+%         pause(0.03); % so that we can see it      
     end
     
     %% ready for next cycle
@@ -154,6 +157,10 @@ for iter = 1:iteration_num
     if (dist_goal<Thr)
         bFind = true;
         
+        % store previous path & cost for further comparison
+        pre_path = path.pos;
+        pre_cost = path.cost;
+        
         % add target point to path
         path.pos(1).x = x_Goal; 
         path.pos(1).y = y_Goal;
@@ -162,7 +169,7 @@ for iter = 1:iteration_num
         path.pos(2).y = T.v(end).y;
         
         pathIndex = T.v(end).indPrev; % referring to the last second point
-        j=3;
+        j2=3;
         while 1
             if isempty(T.v(pathIndex).x)
                 warning('q(-_-)p : Data corrupted, environment restarting...... ');
@@ -189,31 +196,73 @@ for iter = 1:iteration_num
                 plot(x_Start, y_Start, 'ro', 'MarkerSize',5, 'MarkerFaceColor','r');
                 plot(x_Goal, y_Goal, 'go', 'MarkerSize',5, 'MarkerFaceColor','g');% plot start and target point
                 disp('\(^_^)/ : Environment restarted!');
-                count = 1;
+                path.cost = (xL+yL)*100;  %   cost of a path
+                path.pos.x = 0;
+                path.pos.y = 0;
+                count=1;        % indicating the position in tree 'T'
+                parent_point = [0,0];
                 break
             end
-            path.pos(j).x = T.v(pathIndex).x;
-            path.pos(j).y = T.v(pathIndex).y;
-            check_point = pathIndex;    % store the previous point
+            
+            %   add nodes from 'T' to path 
+            path.pos(j2).x = T.v(pathIndex).x;
+            path.pos(j2).y = T.v(pathIndex).y;
             pathIndex = T.v(pathIndex).indPrev;
             if pathIndex == 1
                 break
             end
-            j=j+1;
+            j2=j2+1;
         end  % 
         
-        % Add start into the path
-        if bFind
+        if bFind    % present the path found
+            % Add start into the path
             path.pos(end+1).x = x_Start; 
             path.pos(end).y = y_Start; 
-
-            for j = 2:length(path.pos)
+            path.cost = 0;
+            for j2 = 2:length(path.pos)
                 % display the path
-                path.cost = (path.pos(j).x - path.pos(j-1).x)^2 + (path.pos(j).y...
-                    - path.pos(j-1).y)^2 + path_cost;
-                plot([path.pos(j).x; path.pos(j-1).x;], [path.pos(j).y; path.pos(j-1).y], 'y', 'Linewidth', 2);
+                path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
+                    - path.pos(j2-1).y)^2 + path.cost;
+                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'y', 'Linewidth', 2);
+                
             end
+            
+            % store previous path & cost for further comparison
+            if (~aFind)     % calibrating path cost
+                pre_path = path.pos;
+                pre_cost = path.cost;
+                disp('Path cost calibrated');
+            end
+            aFind = true;
+
+            disp('One path found');
         end
+        bFind = false;
+        if (pre_cost < path.cost)  %||((aFind && ~bFind))
+            path.pos = pre_path;
+            path.cost = pre_cost;
+            disp('Maintain original path');
+            % plot the current optimal path
+            path.cost = 0;
+            for j2 = 2:length(path.pos)
+                % display the path
+                path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
+                    - path.pos(j2-1).y)^2 + path.cost;
+                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'r', 'Linewidth', 2);
+            end 
+            
+        else
+            
+            path.cost = 0;
+            for j2 = 2:length(path.pos)
+                % display the path
+                path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
+                    - path.pos(j2-1).y)^2 + path.cost;
+                plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'r', 'Linewidth', 2);
+%                 pause(0.01);
+            end
+            disp('Path updated');
+        end    
     end
     
     
@@ -221,8 +270,16 @@ end   % end of interation of 'for' loop for growing tree
 
 
 %% Path found, acqiring solution
-if bFind
+if aFind
     disp('Sucess, path found.');
+%     path.cost = 0;
+    for j2 = 2:length(path.pos)
+        % display the path
+%         path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
+%             - path.pos(j2-1).y)^2 + path.cost;
+        plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'c', 'Linewidth', 3);
+        pause(0.01);
+    end
 else
     disp('Error, no path found.');
 end
