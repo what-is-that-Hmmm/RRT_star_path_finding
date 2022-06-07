@@ -22,7 +22,8 @@ T.v(1).indPrev = 0;
 % Setup the map
 figure(1);
 
-Imp=rgb2gray(PNGmap);
+% Imp=rgb2gray(PNGmap);
+Imp = PNGmap;
 imshow(Imp)
 xL=size(Imp,2);     %length of map in X
 yL=size(Imp,1);     %length of map in Y
@@ -43,10 +44,12 @@ aFind = false;
 
 for iter = 1:iteration_num
     %% finding X_new
+
+    
     % Randomly sample on the map
     if (rand > greedy_index)     % randomly sample in the map, greedy-epsilon
-        x_temp = floor(rand*800);
-        y_temp = floor(rand*800);
+        x_temp = floor(rand*xL);
+        y_temp = floor(rand*yL);
         x_rand = [x_temp, y_temp];
     else
         x_rand = [x_Goal, y_Goal];

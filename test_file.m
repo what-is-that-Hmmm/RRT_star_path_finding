@@ -2,17 +2,19 @@ clc
 clear all; close all;
 
 x_Start=1; y_Start=1;           % set starting point
-x_Goal=700; y_Goal=700;       % set target point
-Thr=40;                 % target threshold (vicinity to be considered as target)
-Delta= 30;              % step length
-iteration_num = 1000;   % the iteration number for expanding the tree
-greedy_index = 0;     % how greedy the tree would expand towards target, 1 for the most greedy
+x_Goal=2000; y_Goal=1400;       % set target point
+Thr=150;                 % target threshold (vicinity to be considered as target)
+Delta= 100;              % step length
+iteration_num = 3000;   % the iteration number for expanding the tree
+greedy_index = 0.01;     % how greedy the tree would expand towards target, 1 for the most greedy
 
-ImpRgb=imread('newmap.png');
+ImpRgb=imread('usr_map1.png');
 
+%% RRT_star
 path = RRT_star_path_finding(x_Start,y_Start,x_Goal,y_Goal,...
     Thr,Delta,iteration_num,greedy_index,ImpRgb);
 
+%% ploting
 figure(2),
 imshow(ImpRgb);
 hold on

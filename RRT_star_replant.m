@@ -3,12 +3,12 @@ clc
 clear all; close all;
 
 x_Start=1; y_Start=1;           % set starting point
-x_Goal=700; y_Goal=700;       % set target point
-Thr=40;                 % target threshold (vicinity to be considered as target)
-Delta= 30;              % step length
-iteration_num = 1000;   % the iteration number for expanding the tree
+x_Goal=2000; y_Goal=1700;       % set target point
+Thr=80;                 % target threshold (vicinity to be considered as target)
+Delta= 50;              % step length
+iteration_num = 3000;   % the iteration number for expanding the tree
 greedy_index = 0;     % how greedy the tree would expand towards target, 1 for the most greedy
-query_range = 2*Delta; 
+query_range = 2.2*Delta; 
 
 %% Build up initial tree
 T.v(1).x = x_Start;         % 'T' as tree, 'v' as node, adding starting point to the tree.
@@ -20,8 +20,9 @@ T.v(1).indPrev = 0;
 
 %% Setup the map
 figure(1);
-ImpRgb=imread('newmap.png');
-Imp=rgb2gray(ImpRgb);
+ImpRgb=imread('usr_map1.png');
+% Imp=rgb2gray(ImpRgb);
+Imp = ImpRgb;
 imshow(Imp)
 xL=size(Imp,2);     %length of map in X
 yL=size(Imp,1);     %length of map in Y
@@ -44,10 +45,13 @@ aFind = false;
 
 for iter = 1:iteration_num
     %% finding X_new
+    if iter>=0.8*iteration_num
+        greedy_index = 0.05;
+    end
     % Randomly sample on the map
     if (rand > greedy_index)     % randomly sample in the map, greedy-epsilon
-        x_temp = floor(rand*800);
-        y_temp = floor(rand*800);
+        x_temp = floor(rand*xL);
+        y_temp = floor(rand*yL);
         x_rand = [x_temp, y_temp];
     else
         x_rand = [x_Goal, y_Goal];
@@ -136,16 +140,16 @@ for iter = 1:iteration_num
                     T.v(Xnear(i4,6)).yPrev = x_new(2);
                     T.v(Xnear(i4,6)).dist = DP_temp;
                     T.v(Xnear(i4,6)).indPrev = i2+1;
-%                     plot([T.v(Xnear(i4,6)).x, x_new(1)],[T.v(Xnear(i4,6)).y, x_new(2)],'m');
+                    plot([T.v(Xnear(i4,6)).x, x_new(1)],[T.v(Xnear(i4,6)).y, x_new(2)],'m');
 %                     pause(0.01); % so that we can see it
                 end
             end     %end of the for loop of rewiring
         end
         
         %   Draw the growing process
-%         plot([parent_point(1), x_new(1)],[parent_point(2), x_new(2)],'g');
-%         plot(x_new(1), x_new(2), 'bo', 'MarkerSize',4, 'MarkerFaceColor','b');
-%         pause(0.03); % so that we can see it      
+        plot([parent_point(1), x_new(1)],[parent_point(2), x_new(2)],'g');
+        plot(x_new(1), x_new(2), 'bo', 'MarkerSize',4, 'MarkerFaceColor','b');
+        pause(0.01); % so that we can see it      
     end
     
     %% ready for next cycle
@@ -259,7 +263,7 @@ for iter = 1:iteration_num
                 path.cost = (path.pos(j2).x - path.pos(j2-1).x)^2 + (path.pos(j2).y...
                     - path.pos(j2-1).y)^2 + path.cost;
                 plot([path.pos(j2).x; path.pos(j2-1).x;], [path.pos(j2).y; path.pos(j2-1).y], 'r', 'Linewidth', 2);
-%                 pause(0.01);
+                pause(0.01);
             end
             disp('Path updated');
         end    
